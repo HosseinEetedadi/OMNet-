@@ -1,0 +1,3 @@
+package smartcitysimulation;
+
+@license(LGPL);
