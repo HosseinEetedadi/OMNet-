@@ -1,104 +1,104 @@
 #include <omnetpp.h>
-#include <iostream> // for logging to console
-#include <algorithm> // for std::max_element
-#include <ctime> // for random seeding
-#include <cstdlib> // for random
 #include <vector>
+#include <algorithm>
 
 using namespace omnetpp;
-using namespace std;
 
 class SDNController : public cSimpleModule {
-
 private:
-    // SARSA Parameters
-    double alpha = 0.1;
-    double gamma = 0.9;
-    double epsilon = 0.1;
+    int numMECDevices;
+    int numCoreServers;
+    double epsilon, alpha, gamma;
 
-    // Q-table
-    vector<vector<double>> Q;
+    // SARSA-related variables
+    std::vector<std::vector<double>> qTable;
+    int numStates, numActions;
+    int currentState, lastAction;
 
-    // load tracking
-    vector<int> serverLoad;
-
-    // initialize Q-table
-    void initializeQTable(int numStates, int numActions){
-        Q.resize(numStates);
-        for(int i=0; i<numStates; i++){
-            Q[i].resize(numActions, 0);
-        }
-    }
-
-    //Function to choose action based on epsilon-greedy policy
-    int chooseAction(int state){
-        if((rand() / (RAND_MAX + 1.0)) < epsilon){
-            // Exploration: Random Action
-            return rand() % Q[state].size();
-        }else{
-            //Exploitation: Choose the best action
-            int bestAction = 0;
-            double maxQ = Q[state][0];
-            for(int i = 1; i < Q[state].size(); i++){
-                if(Q[state][i] > maxQ){
-                    maxQ = Q[state][i];
-                    bestAction = i;
-                }
-            }
-            return bestAction;
-        }
-    }
-
-    void updateQTableSARSA(int state, int action, double reward, int nextState, int nextAction){
-        Q[state][action] = Q[state][action] + alpha * (reward + gamma * Q[nextState][nextAction] - Q[state][action]);
-
-    }
-
-    void sendTaskToServer(int action){
-        serverLoad[action] +=1;
-        EV << "Task routed to server/drone "<< action << ", updated load: "<< serverLoad[action] << "\n";
-
-    }
-    double computeReward(int action){
-        int load = serverLoad[action];
-        if (load <= 5 ){
-            return 10 - load;
-        }else{
-            return -1.0 * (load -5);
-
-        }
-    }
 protected:
-    virtual void initialize() override{
-        srand(time(0));
-        int numStates = 10;
-        int numActions = 8;
+    virtual void initialize() override {
 
-        initializeQTable(numStates, numActions);
-        serverLoad.resize(numActions, 0);
+        EV << "Gate 'out' size: " << gateSize("out") << "\n";
+        EV << "Gate 'coreOut' size: " << gateSize("coreOut") << "\n";
+        numMECDevices = par("numMECDevices");
+        numCoreServers = par("numCoreServers");
+        numStates = 10; // Example: discretized states
+        numActions = numMECDevices + numCoreServers;
+
+        epsilon = par("epsilon");
+        alpha = par("alpha");
+        gamma = par("gamma");
+
+        qTable.resize(numStates, std::vector<double>(numActions, 0.0));
+        currentState = 0;
+        lastAction = -1;
     }
 
     virtual void handleMessage(cMessage *msg) override {
-        int state = rand() % 10;
+        if (msg->isSelfMessage()) {
+            handleTaskCompletion(msg);
+        } else {
+            handleNewTask(msg);
+        }
+    }
 
-        int action = chooseAction(state);
+private:
+    void handleNewTask(cMessage *task) {
+        int nextState = getState();
+        int action = chooseAction(nextState);
 
-        EV << "SDNController choose action: "<< action << "for state: " << state << "\n";
+        // Assign task to the chosen server
+        assignTaskToServer(action, task);
 
-        sendTaskToServer(action);
+        // Perform SARSA update
+        if (lastAction != -1) {
+            double reward = getReward(action);
+            qTable[currentState][lastAction] +=
+                alpha * (reward + gamma * qTable[nextState][action] - qTable[currentState][lastAction]);
+        }
 
-        double reward = computeReward(action);
+        currentState = nextState;
+        lastAction = action;
+    }
 
-        EV << "Reward for action " << action << ": " << reward << "\n";
+    int chooseAction(int state) {
+        if (uniform(0, 1) < epsilon) {
+            return uniform(0, numActions - 1); // Explore
+        } else {
+            return std::distance(qTable[state].begin(),
+                                 std::max_element(qTable[state].begin(), qTable[state].end())); // Exploit
+        }
+    }
 
-        int nextState = rand() % 10;
+    void assignTaskToServer(int action, cMessage *task) {
+        if (action < numMECDevices) {
+            EV << "Task Should be assigned to MEC :)";
+            send(task, "out", action); // Assign to MEC server
+        } else {
+            EV << "Task Should be assigned to Core Server :)";
+            int serverIndex = action - numMECDevices; // Calculate core server index
+            send(task, "coreOut", serverIndex);       // Assign to core server
+        }
+    }
 
-        int nextAction = chooseAction(nextState);
+    int getState() {
+        // Example state logic: task queue size (discretized)
+        return uniform(0, numStates - 1); // Simplified for demo
+    }
 
-        updateQTableSARSA(state, action, reward, nextState, nextAction);
+    double getReward(int action) {
+        // Example reward logic: incentivize lightly loaded servers
+        if (action < numMECDevices) {
+            return 1.0; // Reward for MEC servers
+        } else {
+            return 2.0; // Higher reward for core servers
+        }
+    }
 
-        EV << " Next state: " << nextState << ", Next action: " << nextAction << "\n";
+    void handleTaskCompletion(cMessage *msg) {
+        EV << "Task completed. Acknowledged by SDN Controller.\n";
+        delete msg;
     }
 };
 
-Define_Module(SDNController)
+Define_Module(SDNController);

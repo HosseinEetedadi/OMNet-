@@ -1,52 +1,45 @@
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-// 
-// You should have received a copy of the GNU Lesser General Public License
-// along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
-
 package smartcitysimulation;
 
-import smartcitysimulation.IoTDevice;
-import smartcitysimulation.MECServer;
-import smartcitysimulation.SDNController;
-
-network SmartCity
-{
+network SmartCity {
     submodules:
-        iot[10]: IoTDevice {
-            @display("p=100,200");
-        }
-        mec[5]: MECServer {
-            serverType = "Fixed";
-            @display("p=300,200");
-        }
-        drones[3]: MECServer {
-            serverType = "Drone";
-            @display("p=400,300");
-        }
         controller: SDNController {
-            @display("p=500,200");
+            gates:
+                in[5];          // Input gates for messages from MEC servers
+                out[5];         // Output gates for messages to MEC servers
+                coreIn[3];      // Input gates for messages from Core servers
+                coreOut[3];     // Output gates for messages to Core servers
+                iotIn[10];      // Input gates for messages from IoT devices
+                iotOut[10];     // Output gates for messages to IoT devices
         }
-    connections:
-        for i=0..9 {
-            iot[i].out --> controller.in++;
-            controller.out++ --> iot[i].in;
+        mec[5]: MECServer {     // Array of 5 MEC servers
+            parameters:
+                processingCapacity = 10; // MEC server capacity
         }
-        for i=0..4 {
-            mec[i].out --> controller.in++;
-            controller.out++ --> mec[i].in;
+        coreServer[3]: CoreServer { // Array of 3 Core servers
+            parameters:
+                processingCapacity = 50; // Core server capacity
         }
-        for i=0..2 {
-            drones[i].out --> controller.in++;
-            controller.out++ --> drones[i].in;
+        iot[10]: IoTDevice {    // Array of 10 IoT devices
+            parameters:
+                taskGenerationInterval = 1s; // Task generation interval
+                taskSize = 1;                // Task size or complexity
+        }
+    connections allowunconnected:
+        // Bidirectional connection between MEC servers and SDN Controller
+        for i = 0..sizeof(mec) - 1 {
+            controller.out[i] --> mec[i].in;
+            mec[i].out --> controller.in[i];
+        }
+
+        // Bidirectional connection between Core servers and SDN Controller
+        for i = 0..sizeof(coreServer) - 1 {
+            controller.coreOut[i] --> coreServer[i].in;
+            coreServer[i].out --> controller.coreIn[i];
+        }
+
+        // Bidirectional connection between IoT devices and SDN Controller
+        for i = 0..sizeof(iot) - 1 {
+            iot[i].out --> controller.iotIn[i];
+            controller.iotOut[i] --> iot[i].in;
         }
 }

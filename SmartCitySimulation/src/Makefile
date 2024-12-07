@@ -30,7 +30,7 @@ PROJECTRELATIVE_PATH = src
 O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
-OBJS = $O/IoTDevice.o $O/SDNController.o $O/TaskScheduler.o
+OBJS = $O/CoreServer.o $O/IoTDevice.o $O/SDNController.o $O/TaskScheduler.o
 
 # Message files
 MSGFILES =

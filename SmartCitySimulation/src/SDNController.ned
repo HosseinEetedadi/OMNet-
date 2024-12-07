@@ -14,12 +14,20 @@
 // 
 
 package smartcitysimulation;
-simple SDNController
-{
+
+simple SDNController {
     parameters:
-        double updateInterval = default(1.0); // Frequency of updates
-        @display("i=block/cogwheel");
+        int numMECDevices;          // Number of MEC devices
+        int numCoreServers;         // Number of core servers
+        int coreServerCapacity;     // Capacity of each core server
+        double epsilon = default(0.1);  // Exploration rate
+        double alpha = default(0.1);    // Learning rate
+        double gamma = default(0.9);    // Discount factor
     gates:
-        input in[];
-        output out[];
+        input in[];         // Input gate vector for messages from MEC servers
+        output out[];       // Output gate vector for messages to MEC servers
+        input coreIn[];     // Input gate vector for messages from Core servers
+        output coreOut[];   // Output gate vector for messages to Core servers
+		input iotIn[];       // Input gate vector for messages from IoT devices
+        output iotOut[];     // Output gate vector for messages to IoT devices
 }
