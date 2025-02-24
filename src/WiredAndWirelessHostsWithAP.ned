@@ -1,18 +1,3 @@
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-// 
-// You should have received a copy of the GNU Lesser General Public License
-// along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
-
 package sdnproject;
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,6 +8,7 @@ import inet.node.ethernet.Eth100M;
 import inet.node.ethernet.Eth1G;
 import inet.mobility.tracemobility.TractorMobility;
 import inet.node.inet.Router;
+import inet.node.openflow.OpenFlowSwitch;
 import inet.node.inet.StandardHost;
 import inet.node.inet.WirelessHost;
 import inet.node.inet.BaseStation;
@@ -52,27 +38,27 @@ network WiredAndWirelessHostsWithAP
                 @display("p=68,224;is=s");
         }
 
-        wirelessHost1: WirelessHost {
+        mobileServer1: WirelessHost {
             parameters:
                 @display("p=2313,1542");
 //                @display("i=device/cellphone2_vl");
 				@display("i=device/pocketpc_s;r=,,#704050");
 
         }
-        wirelessHost2: WirelessHost {
+        mobileServer2: WirelessHost {
             parameters:
                 @display("p=967,1542");
 //                @display("i=device/cellphone_vl");
 				@display("i=device/pocketpc_s;r=,,#705070");
 
         }
-        wirelessHost3: WirelessHost {
+        mobileServer3: WirelessHost {
             parameters:
                 @display("p=2179,757");
                 @display("i=device/pocketpc_s;r=,,#107010");
 
         }
-        wirelessHost4: WirelessHost {
+        mobileServer4: WirelessHost {
             parameters:
                 @display("p=1416,911");
 //                @display("i=device/cellphone2_vl");
@@ -80,49 +66,49 @@ network WiredAndWirelessHostsWithAP
 
         }
 
-        wiredHost1: StandardHost {
+        MECServer1: StandardHost {
             parameters:
                 @display("p=1633,1542");
                 @display("i=device/server");
         }
-        wiredHost2: StandardHost {
+        MECServer2: StandardHost {
             parameters:
                 @display("p=1633,1696");
                 @display("i=device/server");
         }
-        wiredHost3: StandardHost {
+        CoreServer1: StandardHost {
             parameters:
                 @display("p=3343,2810");
                 @display("i=device/server2");
         }
 
-        wiredHost4: StandardHost {
+        CoreServer2: StandardHost {
             parameters:
                 @display("p=3098,2810");
                 @display("i=device/server2");
         }
 
-        wiredHost5: StandardHost {
+        CoreServer3: StandardHost {
             parameters:
                 @display("p=3098,2992");
                 @display("i=device/server2");
         }
 
-        wiredHost6: StandardHost {
+        CoreServer4: StandardHost {
             parameters:
                 @display("p=3343,3034");
                 @display("i=device/server2");
         }
-        wiredHost7: StandardHost {
+        CoreServer5: StandardHost {
             parameters:
                 @display("p=3098,3189");
                 @display("i=device/server2");
         }
-        wiredHost8: StandardHost {
-            parameters:
-                @display("p=3343,3343");
-                @display("i=device/server2");
-        }
+        CoreServer6: StandardHost {
+   			 parameters:
+          		@display("p=3098,3189");
+           		@display("i=device/server2");  
+		}
 
         router1: Router {
             parameters:
@@ -164,13 +150,13 @@ network WiredAndWirelessHostsWithAP
         router4.ethg++ <--> Eth100M <--> router6.ethg++;
 
 
-        wiredHost1.ethg++ <--> Eth100M <--> bts.ethg++;
-        wiredHost2.ethg++ <--> Eth100M <--> bts.ethg++;
-        wiredHost3.ethg++ <--> Eth100M <--> router6.ethg++;
-        wiredHost4.ethg++ <--> Eth100M <--> router6.ethg++;
-        wiredHost5.ethg++ <--> Eth100M <--> router6.ethg++;
-        wiredHost6.ethg++ <--> Eth100M <--> router6.ethg++;
-        wiredHost7.ethg++ <--> Eth100M <--> router6.ethg++;
-        wiredHost8.ethg++ <--> Eth100M <--> router6.ethg++;
+        MECServer1.ethg++ <--> Eth100M <--> bts.ethg++;
+        MECServer2.ethg++ <--> Eth100M <--> bts.ethg++;
+        CoreServer1.ethg++ <--> Eth100M <--> router6.ethg++;
+        CoreServer2.ethg++ <--> Eth100M <--> router6.ethg++;
+        CoreServer3.ethg++ <--> Eth100M <--> router6.ethg++;
+        CoreServer4.ethg++ <--> Eth100M <--> router6.ethg++;
+        CoreServer5.ethg++ <--> Eth100M <--> router6.ethg++;
+        CoreServer6.ethg++ <--> Eth100M <--> router6.ethg++;
 
 }
